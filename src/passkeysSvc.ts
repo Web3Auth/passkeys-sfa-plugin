@@ -7,11 +7,11 @@ import {
   RegistrationResponseJSON,
 } from "@simplewebauthn/types";
 import { post } from "@toruslabs/http-helpers";
-import { OPENLOGIN_NETWORK_TYPE } from "@toruslabs/openlogin-utils";
+import { BUILD_ENV, type BUILD_ENV_TYPE, OPENLOGIN_NETWORK_TYPE } from "@toruslabs/openlogin-utils";
 import log from "loglevel";
 
-import { BUILD_ENV } from "./constants";
-import { BUILD_ENV_TYPE, PasskeyServiceEndpoints } from "./interfaces";
+import { PasskeyServiceEndpoints } from "./interfaces";
+import { getPasskeyEndpoints } from "./utils";
 
 export interface ILoginData {
   authenticationResponse: AuthenticationResponseJSON;
@@ -40,16 +40,9 @@ export default class PasskeyService {
 
   rpName: string;
 
-  constructor(params: {
-    web3authClientId: string;
-    web3authNetwork: OPENLOGIN_NETWORK_TYPE;
-    buildEnv: BUILD_ENV_TYPE;
-    passkeyEndpoints: PasskeyServiceEndpoints;
-    rpID: string;
-    rpName: string;
-  }) {
+  constructor(params: { web3authClientId: string; web3authNetwork: OPENLOGIN_NETWORK_TYPE; buildEnv: BUILD_ENV_TYPE; rpID: string; rpName: string }) {
     this.web3authClientId = params.web3authClientId;
-    this.endpoints = params.passkeyEndpoints;
+    this.endpoints = getPasskeyEndpoints(params.buildEnv);
     this.buildEnv = params.buildEnv;
     this.web3authNetwork = params.web3authNetwork;
     this.rpID = params.rpID;
@@ -79,7 +72,7 @@ export default class PasskeyService {
   async registerPasskey(params: { verificationResponse: RegistrationResponseJSON; signatures: string[]; passkeyToken?: string; data?: string }) {
     try {
       const result = await this.verifyRegistration(params.verificationResponse, params.signatures, params.passkeyToken, params.data);
-      if (result) return { response: params.verificationResponse, data: result };
+      return { response: params.verificationResponse, data: result };
     } catch (error) {
       log.error("error verifying registration", error);
       throw error;
