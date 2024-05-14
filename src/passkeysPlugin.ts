@@ -1,17 +1,15 @@
 import { NodeDetailManager } from "@toruslabs/fetch-node-details";
+import { decryptData } from "@toruslabs/metadata-helpers";
 import { SafeEventEmitter, SafeEventEmitterProvider } from "@toruslabs/openlogin-jrpc";
 import { OpenloginUserInfo } from "@toruslabs/openlogin-utils";
-import Torus, { keccak256 } from "@toruslabs/torus.js";
-import type { IWeb3Auth, WALLET_ADAPTER_TYPE } from "@web3auth/base";
-import { type IPlugin, PLUGIN_EVENTS, PLUGIN_NAMESPACES, type PluginNamespace } from "@web3auth/base-plugin";
+import Torus, { keccak256, TorusPublicKey } from "@toruslabs/torus.js";
+import { type IPlugin, type IWeb3Auth, PLUGIN_EVENTS, PLUGIN_NAMESPACES, type PluginNamespace, WALLET_ADAPTER_TYPE } from "@web3auth/base";
 import { ADAPTER_EVENTS, type AggregateVerifierParams, type IWeb3Auth as ISFAWeb3auth } from "@web3auth/single-factor-auth";
-import base64url from "base64url";
-import BN from "bn.js";
 
 import { BUILD_ENV, PASSKEYS_VERIFIER_MAP } from "./constants";
 import { IPasskeysPluginOptions, LoginParams, RegisterPasskeyParams } from "./interfaces";
 import PasskeyService from "./passkeysSvc";
-import { ecCurve, getMetadataUrl, getNonce, getPasskeyEndpoints, getUserInfo, saveUserInfo, setNonce } from "./utils";
+import { encryptData, getPasskeyEndpoints, getPasskeyVerifierId, getSiteName, getTopLevelDomain, getUserName } from "./utils";
 
 export class PasskeysPlugin extends SafeEventEmitter implements IPlugin {
   name = "PASSKEYS_PLUGIN";
@@ -45,8 +43,16 @@ export class PasskeysPlugin extends SafeEventEmitter implements IPlugin {
     if (!options.buildEnv) options.buildEnv = BUILD_ENV.PRODUCTION;
     if (!options.passkeyEndpoints) options.passkeyEndpoints = getPasskeyEndpoints(options.buildEnv);
     if (!options.serverTimeOffset) options.serverTimeOffset = 0;
-    if (!options.rpID) options.rpID = window.location.hostname;
-    if (!options.rpName) options.rpName = window.location.hostname;
+    if (!options.rpID) {
+      if (typeof window !== "undefined") {
+        options.rpID = getTopLevelDomain(window.location.href);
+      }
+    }
+    if (!options.rpName) {
+      if (typeof window !== "undefined") {
+        options.rpName = getSiteName(window) || "";
+      }
+    }
 
     this.options = options;
   }
@@ -81,7 +87,6 @@ export class PasskeysPlugin extends SafeEventEmitter implements IPlugin {
     });
 
     if (!this.options.verifier) this.options.verifier = PASSKEYS_VERIFIER_MAP[web3AuthNetwork];
-    if (!this.options.metadataHost) this.options.metadataHost = getMetadataUrl(web3AuthNetwork);
 
     if (this.web3auth.connected) {
       this.basePrivKey = this.web3auth.torusPrivKey;
@@ -112,12 +117,14 @@ export class PasskeysPlugin extends SafeEventEmitter implements IPlugin {
     if (!this.passkeysSvc) throw new Error("Passkey service not initialized");
     if (!this.web3auth.connected) throw new Error("Web3Auth not connected");
 
-    if (!username) throw new Error("Username is required for passkey registration.");
+    if (!username) {
+      username = getUserName(this.userInfo);
+    }
 
     const { verifier, verifierId, aggregateVerifier } = this.userInfo;
-    const result = await this.passkeysSvc.registerUser({
-      oAuthVerifier: verifier,
-      oAuthVerifierId: aggregateVerifier || verifierId,
+    const result = await this.passkeysSvc.initiateRegistration({
+      oAuthVerifier: aggregateVerifier || verifier,
+      oAuthVerifierId: verifierId,
       authenticatorAttachment,
       signatures: this.sessionSignatures,
       username,
@@ -126,50 +133,21 @@ export class PasskeysPlugin extends SafeEventEmitter implements IPlugin {
 
     if (!result) throw new Error("passkey registration failed.");
 
-    // TODO: maybe we need a better ux here to explain as why we are doing double verification here.
-    const loginResult = await this.passkeysSvc.loginUser(result.id);
-    if (!loginResult) throw new Error("passkey login failed.");
+    const passkeyVerifierId = await getPasskeyVerifierId(result);
 
-    const {
-      response: { signature, clientDataJSON, authenticatorData },
-      id,
-    } = loginResult.authenticationResponse;
-    const { publicKey, challenge } = loginResult.data;
+    // get the passkey public address.
+    const passkeyPublicKey = await this.getPasskeyPublicKey({ verifier: this.options.verifier, verifierId: passkeyVerifierId });
 
-    const verifierHash = keccak256(Buffer.from(publicKey, "base64")).slice(2);
-    const passkeyVerifierId = base64url.fromBase64(Buffer.from(verifierHash, "hex").toString("base64"));
+    const encryptedMetadata = await this.getEncryptedMetadata(passkeyPublicKey);
 
-    const loginParams: LoginParams = {
-      verifier: this.options.verifier,
-      verifierId: passkeyVerifierId,
-      idToken: signature,
-      extraVerifierParams: {
-        signature,
-        clientDataJSON,
-        authenticatorData,
-        publicKey,
-        challenge,
-        rpOrigin: window.location.origin,
-        rpId: this.options.rpID,
-        credId: id,
-      },
-    };
+    const verificationResult = await this.passkeysSvc.registerPasskey({
+      verificationResponse: result,
+      signatures: this.sessionSignatures,
+      passkeyToken: this.authToken,
+      data: encryptedMetadata,
+    });
 
-    // get the passkey private key.
-    const passkey = await this.getPasskeyPostboxKey(loginParams);
-
-    // get the deterministic nonce.
-    // Nonce = OAuthKey - Passkey.
-    const nonce = this.getNonce(this.basePrivKey, passkey);
-
-    // save the nonce in the metadata db.
-    // this will throw an error if it fails.
-    await setNonce(this.options.metadataHost, passkey, nonce, this.options.serverTimeOffset);
-
-    // if the nonce is set, then we are good to go.
-    // We set the oAuthUserInfo in the metadata DB.
-    // This will be help us to get the user info when you login with passkey.
-    await saveUserInfo(this.options.metadataHost, this.basePrivKey, this.userInfo);
+    if (!verificationResult) throw new Error("passkey registration failed.");
 
     return true;
   }
@@ -185,14 +163,11 @@ export class PasskeysPlugin extends SafeEventEmitter implements IPlugin {
       response: { signature, clientDataJSON, authenticatorData },
       id,
     } = loginResult.authenticationResponse;
-    const { publicKey, challenge } = loginResult.data;
-
-    const verifierHash = keccak256(Buffer.from(publicKey, "base64")).slice(2);
-    const passkeyVerifierId = base64url.fromBase64(Buffer.from(verifierHash, "hex").toString("base64"));
+    const { publicKey, challenge, metadata, verifierId } = loginResult.data;
 
     const loginParams: LoginParams = {
       verifier: this.options.verifier,
-      verifierId: passkeyVerifierId,
+      verifierId,
       idToken: signature,
       extraVerifierParams: {
         signature,
@@ -208,14 +183,12 @@ export class PasskeysPlugin extends SafeEventEmitter implements IPlugin {
 
     // get the passkey private key.
     const passkey = await this.getPasskeyPostboxKey(loginParams);
-    const nonce = await getNonce(this.options.metadataHost, passkey, this.options.serverTimeOffset);
-    if (!nonce) throw new Error("Unable to login with passkey, no passkey found or different passkey selected to login.");
 
-    const privKey = this.getPrivKeyFromNonce(passkey, nonce);
-    // get the oAuthUserInfo from the metadata DB.
-    const userInfo = await getUserInfo(this.options.metadataHost, privKey);
+    // decrypt the data.
+    const data = await decryptData<{ privKey: string; userInfo: OpenloginUserInfo }>(passkey, metadata);
+    if (!data) throw new Error("Unable to decrypt metadata.");
 
-    await (this.web3auth as ISFAWeb3auth).finalizeLogin({ privKey, userInfo, passkeyToken: loginResult.data.idToken });
+    await (this.web3auth as ISFAWeb3auth).finalizeLogin({ privKey: data.privKey, userInfo: data.userInfo, passkeyToken: loginResult.data.idToken });
     return (this.web3auth as ISFAWeb3auth).provider;
   }
 
@@ -226,6 +199,25 @@ export class PasskeysPlugin extends SafeEventEmitter implements IPlugin {
     return this.passkeysSvc.getAllPasskeys({ passkeyToken: this.authToken, signatures: this.sessionSignatures });
   }
 
+  private async getEncryptedMetadata(passkeyPubKey: TorusPublicKey) {
+    const metadata = { privKey: this.basePrivKey, userInfo: this.userInfo };
+
+    // encrypting the metadata.
+    return encryptData({ x: passkeyPubKey.finalKeyData.X, y: passkeyPubKey.finalKeyData.Y }, metadata);
+  }
+
+  private async getPasskeyPublicKey(params: { verifier: string; verifierId: string }) {
+    if (!this.initialized) throw new Error("Sdk not initialized, please call init first.");
+
+    const { verifier, verifierId } = params;
+    const verifierDetails = { verifier, verifierId };
+
+    const { torusNodeEndpoints, torusNodePub } = await this.nodeDetailManagerInstance.getNodeDetails(verifierDetails);
+
+    const publicAddress = await this.authInstance.getPublicAddress(torusNodeEndpoints, torusNodePub, { verifier, verifierId });
+    return publicAddress;
+  }
+
   private async getPasskeyPostboxKey(loginParams: LoginParams): Promise<string> {
     if (!this.initialized) throw new Error("Sdk not initialized, please call init first.");
 
@@ -233,10 +225,6 @@ export class PasskeysPlugin extends SafeEventEmitter implements IPlugin {
     const verifierDetails = { verifier, verifierId };
 
     const { torusNodeEndpoints, torusNodePub, torusIndexes } = await this.nodeDetailManagerInstance.getNodeDetails(verifierDetails);
-
-    if (loginParams.serverTimeOffset) {
-      this.authInstance.serverTimeOffset = loginParams.serverTimeOffset;
-    }
 
     // Does the key assign
     if (this.authInstance.isLegacyNetwork) await this.authInstance.getPublicAddress(torusNodeEndpoints, torusNodePub, { verifier, verifierId });
@@ -272,16 +260,8 @@ export class PasskeysPlugin extends SafeEventEmitter implements IPlugin {
       loginParams.extraVerifierParams || {}
     );
 
-    const postboxKey = Torus.getPostboxKey(retrieveSharesResponse);
-    return postboxKey.padStart(64, "0");
-  }
-
-  private getNonce(oAuthKey: string, passkey: string): string {
-    return new BN(oAuthKey, "hex").sub(new BN(passkey, "hex")).umod(ecCurve.curve.n).toString("hex", 64);
-  }
-
-  private getPrivKeyFromNonce(passkey: string, nonce: string): string {
-    return new BN(passkey, "hex").add(new BN(nonce, "hex")).umod(ecCurve.curve.n).toString("hex", 64);
+    if (!retrieveSharesResponse.finalKeyData.privKey) throw new Error("Unable to get passkey privkey.");
+    return retrieveSharesResponse.finalKeyData.privKey.padStart(64, "0");
   }
 
   private subscribeToSfaEvents(web3auth: ISFAWeb3auth) {

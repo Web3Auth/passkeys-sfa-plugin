@@ -42,8 +42,10 @@ export interface LoginParams {
 export interface RegisterPasskeyParams {
   /**
    * The passkey in the user device will be saved with this name.
+   * Defaults to ${loginProvider}|${verifierId}
+   *
    */
-  username: string;
+  username?: string;
   /**
    * Defaults to undefined.
    */
@@ -56,8 +58,6 @@ export interface IPasskeysPluginOptions {
   passkeyEndpoints?: PasskeyServiceEndpoints;
 
   verifier?: string;
-
-  metadataHost?: string;
 
   serverTimeOffset?: number;
 

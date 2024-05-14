@@ -20,6 +20,8 @@ export interface ILoginData {
     transports: AuthenticatorTransportFuture[];
     publicKey: string;
     idToken: string;
+    metadata: string;
+    verifierId: string;
   };
 }
 
@@ -54,24 +56,32 @@ export default class PasskeyService {
     this.rpName = params.rpName;
   }
 
-  async registerUser(params: {
+  async initiateRegistration(params: {
     oAuthVerifier: string;
     oAuthVerifierId: string;
-    signatures: string[];
     username: string;
+    signatures: string[];
     passkeyToken?: string;
     authenticatorAttachment?: AuthenticatorAttachment;
-  }): Promise<{ id: string }> {
+  }): Promise<RegistrationResponseJSON> {
     try {
       const data = await this.getRegistrationOptions(params);
       const { options, trackingId } = data;
       this.trackingId = trackingId;
       const verificationResponse = await startRegistration(options);
-      const result = await this.verifyRegistration(verificationResponse, params.signatures, params.passkeyToken);
-      if (result) return { id: verificationResponse.id };
-      return null;
+      return verificationResponse;
     } catch (error: unknown) {
       log.error("error registering user", error);
+      throw error;
+    }
+  }
+
+  async registerPasskey(params: { verificationResponse: RegistrationResponseJSON; signatures: string[]; passkeyToken?: string; data?: string }) {
+    try {
+      const result = await this.verifyRegistration(params.verificationResponse, params.signatures, params.passkeyToken, params.data);
+      if (result) return { response: params.verificationResponse, data: result };
+    } catch (error) {
+      log.error("error verifying registration", error);
       throw error;
     }
   }
@@ -92,6 +102,8 @@ export default class PasskeyService {
             transports: result.data.transports,
             publicKey: result.data.credential_public_key,
             idToken: result.data.id_token,
+            metadata: result.data.metadata,
+            verifierId: result.data.verifier_id,
           },
         };
       }
@@ -164,10 +176,10 @@ export default class PasskeyService {
     throw new Error("Error getting registration options");
   }
 
-  private async verifyRegistration(verificationResponse: RegistrationResponseJSON, signatures: string[], token: string) {
+  private async verifyRegistration(verificationResponse: RegistrationResponseJSON, signatures: string[], token: string, metadata: string) {
     if (!this.trackingId) throw new Error("trackingId is required, please restart the process again.");
 
-    const response = await post<{ verified: boolean; error?: string }>(
+    const response = await post<{ verified: boolean; error?: string; data?: { challenge_timestamp: string; credential_public_key: string } }>(
       this.endpoints.register.verify,
       {
         web3auth_client_id: this.web3authClientId,
@@ -175,6 +187,7 @@ export default class PasskeyService {
         verification_data: verificationResponse,
         network: this.web3authNetwork,
         signatures,
+        metadata,
       },
       {
         headers: {
@@ -183,7 +196,7 @@ export default class PasskeyService {
       }
     );
     if (response.verified) {
-      return true;
+      return response.data;
     }
     throw new Error(`Error verifying registration, error: ${response.error}`);
   }
@@ -214,6 +227,8 @@ export default class PasskeyService {
         credential_public_key: string;
         rpID: string;
         id_token: string;
+        metadata: string;
+        verifier_id: string;
       };
       error?: string;
     }>(this.endpoints.authenticate.verify, {

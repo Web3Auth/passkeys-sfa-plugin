@@ -23,6 +23,3 @@ export const PASSKEYS_VERIFIER_MAP: Record<OPENLOGIN_NETWORK_TYPE, string> = {
   [OPENLOGIN_NETWORK.SAPPHIRE_MAINNET]: "passkeys-sapphire-mainnet",
   [OPENLOGIN_NETWORK.CELESTE]: "",
 };
-
-export const PASSKEY_NONCE = "passkey_nonce";
-export const OAUTH_USERINFO = "oauth_userinfo";
