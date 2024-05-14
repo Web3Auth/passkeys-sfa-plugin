@@ -19,7 +19,7 @@ export const PASSKEYS_VERIFIER_MAP: Record<OPENLOGIN_NETWORK_TYPE, string> = {
   [OPENLOGIN_NETWORK.TESTNET]: "passkeys-legacy-testnet",
   [OPENLOGIN_NETWORK.AQUA]: "passkeys-aqua",
   [OPENLOGIN_NETWORK.CYAN]: "passkeys-cyan",
-  [OPENLOGIN_NETWORK.SAPPHIRE_DEVNET]: "w3a-passkey-devnet",
+  [OPENLOGIN_NETWORK.SAPPHIRE_DEVNET]: "passkeys-sapphire-devnet",
   [OPENLOGIN_NETWORK.SAPPHIRE_MAINNET]: "passkeys-sapphire-mainnet",
   [OPENLOGIN_NETWORK.CELESTE]: "",
 };
