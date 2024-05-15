@@ -45,7 +45,7 @@ export interface RegisterPasskeyParams {
   /**
    * The passkey in the user device will be saved with this name.
    *
-   * @defaultValue ${loginProvider}|${verifierId}
+   * @defaultValue loginProvider|verifierId
    */
   username?: string;
   /**
