@@ -36,7 +36,7 @@ export class PasskeysPlugin extends SafeEventEmitter implements IPlugin {
 
   private verifier: string;
 
-  constructor(options: IPasskeysPluginOptions) {
+  constructor(options: IPasskeysPluginOptions = {}) {
     super();
     if (!options.buildEnv) options.buildEnv = BUILD_ENV.PRODUCTION;
     if (!options.rpID) {
@@ -92,7 +92,7 @@ export class PasskeysPlugin extends SafeEventEmitter implements IPlugin {
     this.emit(PLUGIN_EVENTS.READY);
   }
 
-  public async registerPasskey({ authenticatorAttachment, username }: RegisterPasskeyParams) {
+  public async registerPasskey({ authenticatorAttachment, username }: RegisterPasskeyParams = {}) {
     if (!this.initialized) throw new Error("Sdk not initialized, please call init first.");
     if (!this.passkeysSvc) throw new Error("Passkey service not initialized");
     if (!this.web3auth.connected) throw new Error("Web3Auth not connected");
@@ -143,7 +143,6 @@ export class PasskeysPlugin extends SafeEventEmitter implements IPlugin {
     if (!this.passkeysSvc) throw new Error("Passkey service not initialized");
 
     const loginResult = await this.passkeysSvc.loginUser(authenticatorId);
-    if (!loginResult) throw new Error("passkey login failed.");
 
     try {
       const {
