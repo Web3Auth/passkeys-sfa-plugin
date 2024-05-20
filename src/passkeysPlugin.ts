@@ -1,10 +1,21 @@
 import { NodeDetailManager } from "@toruslabs/fetch-node-details";
 import { decryptData } from "@toruslabs/metadata-helpers";
 import { SafeEventEmitter, SafeEventEmitterProvider } from "@toruslabs/openlogin-jrpc";
-import { BUILD_ENV, OpenloginUserInfo } from "@toruslabs/openlogin-utils";
+import { BUILD_ENV, OpenloginUserInfo, WhiteLabelData } from "@toruslabs/openlogin-utils";
 import Torus, { TorusPublicKey } from "@toruslabs/torus.js";
-import { log, PLUGIN_EVENTS } from "@web3auth/base";
-import { ADAPTER_EVENTS, IPlugin, type IWeb3Auth as ISFAWeb3auth } from "@web3auth/single-factor-auth";
+import {
+  type IPlugin,
+  type IWeb3AuthCore,
+  log,
+  PLUGIN_EVENTS,
+  PLUGIN_NAMESPACES,
+  PLUGIN_STATUS,
+  PLUGIN_STATUS_TYPE,
+  PluginConnectParams,
+  PluginNamespace,
+  WALLET_ADAPTERS,
+} from "@web3auth/base";
+import { ADAPTER_EVENTS, ADAPTER_STATUS, IWeb3Auth as ISFAWeb3auth } from "@web3auth/single-factor-auth";
 
 import { PASSKEYS_VERIFIER_MAP } from "./constants";
 import { IPasskeysPluginOptions, LoginParams, MetadataInfo, RegisterPasskeyParams } from "./interfaces";
@@ -13,6 +24,12 @@ import { encryptData, getPasskeyVerifierId, getSiteName, getTopLevelDomain, getU
 
 export class PasskeysPlugin extends SafeEventEmitter implements IPlugin {
   name = "PASSKEYS_PLUGIN";
+
+  status: PLUGIN_STATUS_TYPE;
+
+  SUPPORTED_ADAPTERS: string[] = [WALLET_ADAPTERS.SFA];
+
+  pluginNamespace: PluginNamespace = PLUGIN_NAMESPACES.MULTICHAIN;
 
   private options: IPasskeysPluginOptions;
 
@@ -53,12 +70,20 @@ export class PasskeysPlugin extends SafeEventEmitter implements IPlugin {
     this.options = options;
   }
 
-  async initWithSfaWeb3auth(web3auth: ISFAWeb3auth) {
+  connect(_params: PluginConnectParams): Promise<void> {
+    throw new Error("Method not implemented.");
+  }
+
+  disconnect(): Promise<void> {
+    throw new Error("Method not implemented.");
+  }
+
+  async initWithWeb3Auth(web3auth: IWeb3AuthCore, _whiteLabel?: WhiteLabelData) {
     if (this.initialized) return;
     if (!web3auth) throw new Error("Web3Auth sfa instance is required");
 
-    this.web3auth = web3auth;
-    const { clientId, web3AuthNetwork } = this.web3auth.options;
+    this.web3auth = web3auth as ISFAWeb3auth;
+    const { clientId, web3AuthNetwork } = this.web3auth.coreOptions;
     if (!clientId || !web3AuthNetwork) throw new Error("Missing Web3auth options");
 
     this.passkeysSvc = new PasskeyService({
@@ -79,16 +104,17 @@ export class PasskeysPlugin extends SafeEventEmitter implements IPlugin {
 
     this.verifier = PASSKEYS_VERIFIER_MAP[web3AuthNetwork];
 
-    if (this.web3auth.connected) {
+    if (this.web3auth.status === ADAPTER_STATUS.CONNECTED && this.web3auth.connectedAdapterName === WALLET_ADAPTERS.SFA) {
       this.basePrivKey = this.web3auth._getBasePrivKey();
       this.userInfo = await this.web3auth.getUserInfo();
-      this.sessionSignatures = this.web3auth.state.sessionSignatures;
+      this.sessionSignatures = this.web3auth.state.signatures;
       this.authToken = this.web3auth.state.passkeyToken;
     }
 
-    this.subscribeToSfaEvents(web3auth);
+    this.subscribeToSfaEvents(web3auth as ISFAWeb3auth);
 
     this.initialized = true;
+    this.status = PLUGIN_STATUS.READY;
     this.emit(PLUGIN_EVENTS.READY);
   }
 
@@ -236,7 +262,7 @@ export class PasskeysPlugin extends SafeEventEmitter implements IPlugin {
     web3auth.on(ADAPTER_EVENTS.CONNECTED, async () => {
       this.basePrivKey = web3auth._getBasePrivKey();
       this.userInfo = await web3auth.getUserInfo();
-      this.sessionSignatures = web3auth.state.sessionSignatures;
+      this.sessionSignatures = web3auth.state.signatures;
       this.authToken = web3auth.state.passkeyToken;
     });
   }
