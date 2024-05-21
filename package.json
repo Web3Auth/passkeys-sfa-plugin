@@ -35,8 +35,8 @@
     "@web3auth/single-factor-auth": "^8.x"
   },
   "dependencies": {
-    "@simplewebauthn/browser": "^9.0.1",
-    "@simplewebauthn/types": "^9.0.1",
+    "@simplewebauthn/browser": "^10.0.0",
+    "@simplewebauthn/types": "^10.0.0",
     "@toruslabs/eccrypto": "^4.0.0",
     "@toruslabs/fetch-node-details": "^13.4.0",
     "@toruslabs/http-helpers": "^6.1.1",
@@ -63,7 +63,7 @@
     "cross-env": "^7.0.3",
     "dotenv": "^16.4.5",
     "eslint": "^8.54.0",
-    "husky": "^8.0.3",
+    "husky": "^9.0.11",
     "lint-staged": "^15.2.2",
     "nyc": "^15.1.0",
     "prettier": "^3.2.5",
