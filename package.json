@@ -27,7 +27,7 @@
     "lint": "eslint --fix 'src/**/*.ts'",
     "prepack": "npm run build",
     "pre-commit": "lint-staged",
-    "prepare": "husky install"
+    "prepare": "husky"
   },
   "peerDependencies": {
     "@babel/runtime": "7.x",
@@ -69,6 +69,9 @@
     "prettier": "^3.2.5",
     "rimraf": "^5.0.7",
     "typescript": "^5.4.5"
+  },
+  "optionalDependencies": {
+    "@rollup/rollup-linux-x64-gnu": "^4.17.2"
   },
   "bugs": {
     "url": "https://github.com/tkey/tkey/issues"
