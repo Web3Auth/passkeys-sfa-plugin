@@ -200,7 +200,11 @@ export class PasskeysPlugin extends SafeEventEmitter implements IPlugin {
       const data = await decryptData<MetadataInfo>(passkey, metadata);
       if (!data) throw new Error("Unable to decrypt metadata.");
 
-      await (this.web3auth as ISFAWeb3auth).finalizeLogin({ privKey: data.privKey, userInfo: data.userInfo, passkeyToken: loginResult.data.idToken });
+      await (this.web3auth as ISFAWeb3auth)._finalizeLogin({
+        privKey: data.privKey,
+        userInfo: data.userInfo,
+        passkeyToken: loginResult.data.idToken,
+      });
       return (this.web3auth as ISFAWeb3auth).provider;
     } catch (error: unknown) {
       log.error("error login with passkey", error);
