@@ -35,8 +35,8 @@
     "@web3auth/single-factor-auth": "^8.x"
   },
   "dependencies": {
-    "@simplewebauthn/browser": "^9.0.1",
-    "@simplewebauthn/types": "^9.0.1",
+    "@simplewebauthn/browser": "^10.0.0",
+    "@simplewebauthn/types": "^10.0.0",
     "@toruslabs/eccrypto": "^4.0.0",
     "@toruslabs/fetch-node-details": "^13.4.0",
     "@toruslabs/http-helpers": "^6.1.1",
@@ -50,8 +50,8 @@
     "loglevel": "^1.9.1"
   },
   "devDependencies": {
-    "@web3auth/base": "^8.4.1",
-    "@web3auth/single-factor-auth": "^8.0.0-beta.0",
+    "@web3auth/base": "^8.6.1",
+    "@web3auth/single-factor-auth": "^8.0.0",
     "@babel/register": "^7.23.7",
     "@babel/runtime": "^7.24.5",
     "@toruslabs/config": "^2.0.2",
@@ -63,12 +63,15 @@
     "cross-env": "^7.0.3",
     "dotenv": "^16.4.5",
     "eslint": "^8.54.0",
-    "husky": "^8.0.3",
+    "husky": "^9.0.11",
     "lint-staged": "^15.2.2",
     "nyc": "^15.1.0",
     "prettier": "^3.2.5",
     "rimraf": "^5.0.7",
     "typescript": "^5.4.5"
+  },
+  "optionalDependencies": {
+    "@rollup/rollup-linux-x64-gnu": "^4.17.2"
   },
   "bugs": {
     "url": "https://github.com/tkey/tkey/issues"
