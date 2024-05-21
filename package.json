@@ -1,6 +1,6 @@
 {
   "name": "@web3auth/passkeys-sfa-plugin",
-  "version": "8.0.0",
+  "version": "8.0.1",
   "description": "Passkeys SFA plugin for fast login",
   "author": "Torus Labs",
   "homepage": "https://github.com/web3auth/web3auth-passkeys-sfa-plugin#readme",
