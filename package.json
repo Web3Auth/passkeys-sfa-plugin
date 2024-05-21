@@ -51,7 +51,7 @@
   },
   "devDependencies": {
     "@web3auth/base": "^8.6.1",
-    "@web3auth/single-factor-auth": "^8.0.0-beta.1",
+    "@web3auth/single-factor-auth": "^8.0.0",
     "@babel/register": "^7.23.7",
     "@babel/runtime": "^7.24.5",
     "@toruslabs/config": "^2.0.2",
