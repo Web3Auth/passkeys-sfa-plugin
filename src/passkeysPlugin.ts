@@ -219,7 +219,7 @@ export class PasskeysPlugin extends SafeEventEmitter implements IPlugin {
     return this.passkeysSvc.getAllPasskeys({ passkeyToken: this.authToken, signatures: this.sessionSignatures });
   }
 
-  public async deletePasskey(id: number) {
+  public async unregisterPasskey(id: number) {
     if (!this.initialized) throw new Error("Sdk not initialized, please call init first.");
     if (!this.passkeysSvc) throw new Error("Passkey service not initialized");
 
