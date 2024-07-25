@@ -18,7 +18,7 @@ import {
 import { ADAPTER_EVENTS, ADAPTER_STATUS, IWeb3Auth as ISFAWeb3auth } from "@web3auth/single-factor-auth";
 
 import { PASSKEYS_VERIFIER_MAP } from "./constants";
-import { IPasskeysPluginOptions, LoginParams, MetadataInfo, RegisterPasskeyParams } from "./interfaces";
+import { IPasskeysPluginOptions, ListPasskeyResponse, LoginParams, MetadataInfo, RegisterPasskeyParams } from "./interfaces";
 import PasskeyService from "./passkeysSvc";
 import { encryptData, getPasskeyVerifierId, getSiteName, getTopLevelDomain, getUserName } from "./utils";
 
@@ -212,11 +212,18 @@ export class PasskeysPlugin extends SafeEventEmitter implements IPlugin {
     }
   }
 
-  public async listAllPasskeys() {
+  public async listAllPasskeys(): Promise<ListPasskeyResponse[]> {
     if (!this.initialized) throw new Error("Sdk not initialized, please call init first.");
     if (!this.passkeysSvc) throw new Error("Passkey service not initialized");
 
     return this.passkeysSvc.getAllPasskeys({ passkeyToken: this.authToken, signatures: this.sessionSignatures });
+  }
+
+  public async deletePasskey(id: number) {
+    if (!this.initialized) throw new Error("Sdk not initialized, please call init first.");
+    if (!this.passkeysSvc) throw new Error("Passkey service not initialized");
+
+    return this.passkeysSvc.deletePasskey({ passkeyToken: this.authToken, signatures: this.sessionSignatures, id });
   }
 
   private async getEncryptedMetadata(passkeyPubKey: TorusPublicKey) {

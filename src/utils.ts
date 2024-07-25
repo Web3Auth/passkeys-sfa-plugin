@@ -23,6 +23,7 @@ export const getPasskeyEndpoints = (buildEnv: BUILD_ENV_TYPE) => {
     },
     crud: {
       list: `${baseUrl}/api/v3/passkey/fast/list`,
+      delete: `${baseUrl}/api/v3/passkey/fast/:id`,
     },
   };
 };

@@ -12,6 +12,7 @@ export interface PasskeyServiceEndpoints {
   };
   crud: {
     list: string;
+    delete: string;
   };
 }
 
@@ -80,4 +81,18 @@ export interface IPasskeysPluginOptions {
    * @defaultValue window.title || window.location.hostname
    */
   rpName?: string;
+}
+
+export interface ListPasskeyResponse {
+  id: number;
+  credential_id: string;
+  browser: string;
+  browser_version: string;
+  transport: string;
+  os: string;
+  os_version: string;
+  platform: string;
+  provider_name: string;
+  created_at: string;
+  updated_at: string;
 }
