@@ -6,11 +6,11 @@ import {
   PublicKeyCredentialCreationOptionsJSON,
   RegistrationResponseJSON,
 } from "@simplewebauthn/types";
-import { post } from "@toruslabs/http-helpers";
+import { post, remove } from "@toruslabs/http-helpers";
 import { BUILD_ENV, type BUILD_ENV_TYPE, OPENLOGIN_NETWORK_TYPE } from "@toruslabs/openlogin-utils";
 import log from "loglevel";
 
-import { PasskeyServiceEndpoints } from "./interfaces";
+import { ListPasskeyResponse, PasskeyServiceEndpoints } from "./interfaces";
 import { getPasskeyEndpoints } from "./utils";
 
 export interface ILoginData {
@@ -92,9 +92,9 @@ export default class PasskeyService {
     return null;
   }
 
-  async getAllPasskeys({ passkeyToken = "", signatures = [] }: { passkeyToken: string; signatures: string[] }) {
+  async getAllPasskeys({ passkeyToken = "", signatures = [] }: { passkeyToken: string; signatures: string[] }): Promise<ListPasskeyResponse[]> {
     try {
-      const response = await post<{ success: boolean; data: { passkeys: Record<string, string> } }>(
+      const response = await post<{ success: boolean; data: { passkeys: ListPasskeyResponse[] } }>(
         this.endpoints.crud.list,
         {
           web3auth_client_id: this.web3authClientId,
@@ -117,6 +117,33 @@ export default class PasskeyService {
         throw new Error(`Error getting passkeys, reason: ${res.error || "unknown"}`);
       }
       log.error("error getting passkeys", error);
+      throw error;
+    }
+  }
+
+  async deletePasskey({ passkeyToken = "", signatures = [], id }: { id: number; passkeyToken: string; signatures: string[] }) {
+    if (!id) throw new Error("passkey_id is required");
+    try {
+      const response = await remove<{ success: boolean; data?: { id: number } }>(
+        this.endpoints.crud.delete.replace(":id", id.toString()),
+        {
+          network: this.web3authNetwork,
+          signatures,
+        },
+        {
+          headers: {
+            Authorization: `Bearer ${passkeyToken}`,
+          },
+        }
+      );
+      if (response.success) return true;
+      throw new Error("Error deleting passkey");
+    } catch (error) {
+      if (error instanceof Response) {
+        const res = await error.json();
+        throw new Error(`Error deleting passkey, reason: ${res.error || "unknown"}`);
+      }
+      log.error("error deleting passkey", error);
       throw error;
     }
   }
