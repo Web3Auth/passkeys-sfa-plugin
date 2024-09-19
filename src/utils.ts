@@ -2,7 +2,7 @@ import { base64URLStringToBuffer } from "@simplewebauthn/browser";
 import { type RegistrationResponseJSON } from "@simplewebauthn/types";
 import { encrypt } from "@toruslabs/eccrypto";
 import { encParamsBufToHex, keccak256 } from "@toruslabs/metadata-helpers";
-import { base64url, BUILD_ENV_TYPE, OpenloginUserInfo } from "@toruslabs/openlogin-utils";
+import { AuthUserInfo, base64url, BUILD_ENV_TYPE } from "@web3auth/auth";
 import { decode } from "cbor-x/decode";
 import { ec as EC } from "elliptic";
 
@@ -148,7 +148,7 @@ export const getPasskeyVerifierId = async (verificationResponse: RegistrationRes
   return verifierId;
 };
 
-export const getUserName = (userInfo: OpenloginUserInfo) => {
+export const getUserName = (userInfo: AuthUserInfo) => {
   const { email, name, typeOfLogin, verifierId } = userInfo;
   if (typeOfLogin && typeOfLogin !== "jwt") return `${typeOfLogin}|${email || name || verifierId}`;
   return email || name || verifierId;

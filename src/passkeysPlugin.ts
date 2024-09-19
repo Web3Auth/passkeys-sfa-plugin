@@ -1,8 +1,7 @@
 import { NodeDetailManager } from "@toruslabs/fetch-node-details";
 import { decryptData } from "@toruslabs/metadata-helpers";
-import { SafeEventEmitter, SafeEventEmitterProvider } from "@toruslabs/openlogin-jrpc";
-import { BUILD_ENV, OpenloginUserInfo, WhiteLabelData } from "@toruslabs/openlogin-utils";
-import Torus, { TorusPublicKey } from "@toruslabs/torus.js";
+import { Torus, TorusPublicKey } from "@toruslabs/torus.js";
+import { AuthUserInfo, BUILD_ENV, SafeEventEmitter, SafeEventEmitterProvider, WhiteLabelData } from "@web3auth/auth";
 import {
   type IPlugin,
   type IWeb3AuthCore,
@@ -18,11 +17,11 @@ import {
 import { ADAPTER_EVENTS, ADAPTER_STATUS, IWeb3Auth as ISFAWeb3auth } from "@web3auth/single-factor-auth";
 
 import { PASSKEYS_VERIFIER_MAP } from "./constants";
-import { IPasskeysPluginOptions, ListPasskeyResponse, LoginParams, MetadataInfo, RegisterPasskeyParams } from "./interfaces";
+import { IPasskeysPluginOptions, ListPasskeyResponse, LoginParams, MetadataInfo, PluginEvents, RegisterPasskeyParams } from "./interfaces";
 import PasskeyService from "./passkeysSvc";
 import { encryptData, getPasskeyVerifierId, getSiteName, getTopLevelDomain, getUserName } from "./utils";
 
-export class PasskeysPlugin extends SafeEventEmitter implements IPlugin {
+export class PasskeysPlugin extends SafeEventEmitter<PluginEvents> implements IPlugin {
   name = "PASSKEYS_PLUGIN";
 
   status: PLUGIN_STATUS_TYPE;
@@ -45,7 +44,7 @@ export class PasskeysPlugin extends SafeEventEmitter implements IPlugin {
 
   private basePrivKey: string;
 
-  private userInfo: OpenloginUserInfo;
+  private userInfo: AuthUserInfo;
 
   private sessionSignatures: string[];
 
@@ -75,6 +74,10 @@ export class PasskeysPlugin extends SafeEventEmitter implements IPlugin {
   }
 
   disconnect(): Promise<void> {
+    throw new Error("Method not implemented.");
+  }
+
+  cleanup(): Promise<void> {
     throw new Error("Method not implemented.");
   }
 

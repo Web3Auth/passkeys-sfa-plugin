@@ -7,7 +7,7 @@ import {
   RegistrationResponseJSON,
 } from "@simplewebauthn/types";
 import { post, remove } from "@toruslabs/http-helpers";
-import { BUILD_ENV, type BUILD_ENV_TYPE, OPENLOGIN_NETWORK_TYPE } from "@toruslabs/openlogin-utils";
+import { BUILD_ENV, type BUILD_ENV_TYPE, WEB3AUTH_NETWORK_TYPE } from "@web3auth/auth";
 import log from "loglevel";
 
 import { ListPasskeyResponse, PasskeyServiceEndpoints } from "./interfaces";
@@ -30,7 +30,7 @@ export default class PasskeyService {
 
   web3authClientId: string;
 
-  web3authNetwork: OPENLOGIN_NETWORK_TYPE;
+  web3authNetwork: WEB3AUTH_NETWORK_TYPE;
 
   buildEnv: string = BUILD_ENV.PRODUCTION;
 
@@ -40,7 +40,7 @@ export default class PasskeyService {
 
   rpName: string;
 
-  constructor(params: { web3authClientId: string; web3authNetwork: OPENLOGIN_NETWORK_TYPE; buildEnv: BUILD_ENV_TYPE; rpID: string; rpName: string }) {
+  constructor(params: { web3authClientId: string; web3authNetwork: WEB3AUTH_NETWORK_TYPE; buildEnv: BUILD_ENV_TYPE; rpID: string; rpName: string }) {
     this.web3authClientId = params.web3authClientId;
     this.endpoints = getPasskeyEndpoints(params.buildEnv);
     this.buildEnv = params.buildEnv;

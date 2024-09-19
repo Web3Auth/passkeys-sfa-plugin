@@ -1,4 +1,4 @@
-import { BUILD_ENV, type BUILD_ENV_TYPE, OPENLOGIN_NETWORK, type OPENLOGIN_NETWORK_TYPE } from "@toruslabs/openlogin-utils";
+import { BUILD_ENV, type BUILD_ENV_TYPE, WEB3AUTH_NETWORK, type WEB3AUTH_NETWORK_TYPE } from "@web3auth/auth";
 
 export const PASSKEY_SVC_URL: Record<BUILD_ENV_TYPE, string> = {
   [BUILD_ENV.DEVELOPMENT]: "http://localhost:3041",
@@ -7,12 +7,12 @@ export const PASSKEY_SVC_URL: Record<BUILD_ENV_TYPE, string> = {
   [BUILD_ENV.PRODUCTION]: "https://api-passwordless.web3auth.io",
 };
 
-export const PASSKEYS_VERIFIER_MAP: Record<OPENLOGIN_NETWORK_TYPE, string> = {
-  [OPENLOGIN_NETWORK.MAINNET]: "passkey-legacy-mainnet",
-  [OPENLOGIN_NETWORK.TESTNET]: "passkey-legacy-testnet",
-  [OPENLOGIN_NETWORK.AQUA]: "passkey-legacy-aqua",
-  [OPENLOGIN_NETWORK.CYAN]: "passkey-legacy-cyan",
-  [OPENLOGIN_NETWORK.SAPPHIRE_DEVNET]: "passkey-sapphire-devnet",
-  [OPENLOGIN_NETWORK.SAPPHIRE_MAINNET]: "passkey-sapphire-mainnet",
-  [OPENLOGIN_NETWORK.CELESTE]: "",
+export const PASSKEYS_VERIFIER_MAP: Record<WEB3AUTH_NETWORK_TYPE, string> = {
+  [WEB3AUTH_NETWORK.MAINNET]: "passkey-legacy-mainnet",
+  [WEB3AUTH_NETWORK.TESTNET]: "passkey-legacy-testnet",
+  [WEB3AUTH_NETWORK.AQUA]: "passkey-legacy-aqua",
+  [WEB3AUTH_NETWORK.CYAN]: "passkey-legacy-cyan",
+  [WEB3AUTH_NETWORK.SAPPHIRE_DEVNET]: "passkey-sapphire-devnet",
+  [WEB3AUTH_NETWORK.SAPPHIRE_MAINNET]: "passkey-sapphire-mainnet",
+  [WEB3AUTH_NETWORK.CELESTE]: "",
 };
