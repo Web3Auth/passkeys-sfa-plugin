@@ -1,4 +1,5 @@
-import { type BUILD_ENV_TYPE, OpenloginUserInfo } from "@toruslabs/openlogin-utils";
+import { AuthUserInfo, type BUILD_ENV_TYPE } from "@web3auth/auth";
+import { PLUGIN_EVENTS } from "@web3auth/base";
 import type { Auth0UserInfo, TorusSubVerifierInfo } from "@web3auth/single-factor-auth";
 
 export interface PasskeyServiceEndpoints {
@@ -39,7 +40,7 @@ export interface LoginParams {
 
 export interface MetadataInfo {
   privKey: string;
-  userInfo: OpenloginUserInfo;
+  userInfo: AuthUserInfo;
 }
 
 export interface RegisterPasskeyParams {
@@ -96,3 +97,7 @@ export interface ListPasskeyResponse {
   created_at: string;
   updated_at: string;
 }
+
+export type PluginEvents = {
+  [PLUGIN_EVENTS.READY]: () => void;
+};
