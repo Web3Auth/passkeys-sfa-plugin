@@ -33,7 +33,7 @@
   "peerDependencies": {
     "@babel/runtime": "7.x",
     "@web3auth/base": "^9.x",
-    "@web3auth/single-factor-auth": "9.x"
+    "@web3auth/single-factor-auth": "^9.x"
   },
   "dependencies": {
     "@simplewebauthn/browser": "^10.0.0",
