@@ -1,7 +1,7 @@
 import { NodeDetailManager } from "@toruslabs/fetch-node-details";
 import { decryptData } from "@toruslabs/metadata-helpers";
 import { Torus, TorusPublicKey } from "@toruslabs/torus.js";
-import { AuthUserInfo, BUILD_ENV, SafeEventEmitter, SafeEventEmitterProvider, WhiteLabelData } from "@web3auth/auth";
+import { type AuthUserInfo, type BUILD_ENV, type SafeEventEmitter, type SafeEventEmitterProvider, type WhiteLabelData } from "@web3auth/auth";
 import {
   type IPlugin,
   type IWeb3AuthCore,

@@ -7,7 +7,7 @@ import {
   RegistrationResponseJSON,
 } from "@simplewebauthn/types";
 import { post, remove } from "@toruslabs/http-helpers";
-import { BUILD_ENV, type BUILD_ENV_TYPE, WEB3AUTH_NETWORK_TYPE } from "@web3auth/auth";
+import { BUILD_ENV, type BUILD_ENV_TYPE, type WEB3AUTH_NETWORK_TYPE } from "@web3auth/auth";
 import log from "loglevel";
 
 import { ListPasskeyResponse, PasskeyServiceEndpoints } from "./interfaces";

@@ -2,7 +2,7 @@ import { base64URLStringToBuffer } from "@simplewebauthn/browser";
 import { type RegistrationResponseJSON } from "@simplewebauthn/types";
 import { encrypt } from "@toruslabs/eccrypto";
 import { encParamsBufToHex, keccak256 } from "@toruslabs/metadata-helpers";
-import { AuthUserInfo, base64url, BUILD_ENV_TYPE } from "@web3auth/auth";
+import { type AuthUserInfo, base64url, type BUILD_ENV_TYPE } from "@web3auth/auth";
 import { decode } from "cbor-x/decode";
 import { ec as EC } from "elliptic";
 

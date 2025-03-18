@@ -1,4 +1,4 @@
-import { AuthUserInfo, type BUILD_ENV_TYPE } from "@web3auth/auth";
+import { type AuthUserInfo, type BUILD_ENV_TYPE } from "@web3auth/auth";
 import { PLUGIN_EVENTS } from "@web3auth/base";
 import type { Auth0UserInfo, TorusSubVerifierInfo } from "@web3auth/single-factor-auth";
 
