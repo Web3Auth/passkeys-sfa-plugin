@@ -7,7 +7,7 @@ import {
   RegistrationResponseJSON,
 } from "@simplewebauthn/types";
 import { post, remove } from "@toruslabs/http-helpers";
-import { BUILD_ENV, type BUILD_ENV_TYPE, WEB3AUTH_NETWORK_TYPE } from "@web3auth/auth";
+import { BUILD_ENV, type BUILD_ENV_TYPE, type WEB3AUTH_NETWORK_TYPE } from "@web3auth/auth";
 import log from "loglevel";
 
 import { ListPasskeyResponse, PasskeyServiceEndpoints } from "./interfaces";
@@ -60,7 +60,9 @@ export default class PasskeyService {
     const data = await this.getRegistrationOptions(params);
     const { options, trackingId } = data;
     this.trackingId = trackingId;
-    const verificationResponse = await startRegistration(options);
+    const verificationResponse = await startRegistration({
+      optionsJSON: options,
+    });
     return verificationResponse;
   }
 
@@ -73,7 +75,9 @@ export default class PasskeyService {
     const data = await this.getAuthenticationOptions(authenticatorId);
     const { options, trackingId } = data;
     this.trackingId = trackingId;
-    const verificationResponse = await startAuthentication(options);
+    const verificationResponse = await startAuthentication({
+      optionsJSON: options,
+    });
     const result = await this.verifyAuthentication(verificationResponse);
     if (result && result.verified && result.data) {
       log.info("authentication response", verificationResponse);
