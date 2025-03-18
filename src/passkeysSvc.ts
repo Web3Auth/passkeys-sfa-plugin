@@ -60,7 +60,9 @@ export default class PasskeyService {
     const data = await this.getRegistrationOptions(params);
     const { options, trackingId } = data;
     this.trackingId = trackingId;
-    const verificationResponse = await startRegistration(options);
+    const verificationResponse = await startRegistration({
+      optionsJSON: options,
+    });
     return verificationResponse;
   }
 
@@ -73,7 +75,9 @@ export default class PasskeyService {
     const data = await this.getAuthenticationOptions(authenticatorId);
     const { options, trackingId } = data;
     this.trackingId = trackingId;
-    const verificationResponse = await startAuthentication(options);
+    const verificationResponse = await startAuthentication({
+      optionsJSON: options,
+    });
     const result = await this.verifyAuthentication(verificationResponse);
     if (result && result.verified && result.data) {
       log.info("authentication response", verificationResponse);

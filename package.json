@@ -10,7 +10,7 @@
   "module": "dist/lib.esm/index.js",
   "unpkg": "dist/passkeysSfaPlugin.umd.min.js",
   "jsdelivr": "dist/passkeysSfaPlugin.umd.min.js",
-  "types": "dist/types/index.d.ts",
+  "types": "dist/lib.cjs/types/index.d.ts",
   "files": [
     "dist"
   ],
@@ -83,7 +83,7 @@
     ]
   },
   "engines": {
-    "node": ">=18.x",
+    "node": ">=20.x",
     "npm": ">=9.x"
   },
   "gitHead": "9967ce9f795f495f28ef0da1fc50acde31dcc258"

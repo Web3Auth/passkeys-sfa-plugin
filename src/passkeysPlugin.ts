@@ -1,7 +1,7 @@
 import { NodeDetailManager } from "@toruslabs/fetch-node-details";
 import { decryptData } from "@toruslabs/metadata-helpers";
 import { Torus, TorusPublicKey } from "@toruslabs/torus.js";
-import { type AuthUserInfo, type BUILD_ENV, type SafeEventEmitter, type SafeEventEmitterProvider, type WhiteLabelData } from "@web3auth/auth";
+import { type AuthUserInfo, BUILD_ENV, SafeEventEmitter, type SafeEventEmitterProvider, type WhiteLabelData } from "@web3auth/auth";
 import {
   type IPlugin,
   type IWeb3AuthCore,
@@ -254,19 +254,20 @@ export class PasskeysPlugin extends SafeEventEmitter<PluginEvents> implements IP
     const { verifier, verifierId, idToken } = loginParams;
     const verifierDetails = { verifier, verifierId };
 
-    const { torusNodeEndpoints, torusIndexes } = await this.nodeDetailManagerInstance.getNodeDetails(verifierDetails);
+    const { torusNodeEndpoints, torusIndexes, torusNodePub } = await this.nodeDetailManagerInstance.getNodeDetails(verifierDetails);
 
     const finalIdToken = idToken;
     const finalVerifierParams = { verifier_id: verifierId };
 
-    const retrieveSharesResponse = await this.authInstance.retrieveShares(
-      torusNodeEndpoints,
-      torusIndexes,
+    const retrieveSharesResponse = await this.authInstance.retrieveShares({
+      endpoints: torusNodeEndpoints,
+      indexes: torusIndexes,
       verifier,
-      finalVerifierParams,
-      finalIdToken,
-      loginParams.extraVerifierParams || {}
-    );
+      verifierParams: finalVerifierParams,
+      idToken: finalIdToken,
+      nodePubkeys: torusNodePub,
+      extraParams: loginParams.extraVerifierParams || {},
+    });
 
     if (!retrieveSharesResponse.finalKeyData.privKey) throw new Error("Unable to get passkey privkey.");
     return retrieveSharesResponse.finalKeyData.privKey.padStart(64, "0");
